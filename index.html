@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html ng-app="superhydrantApp">
+<head>
+    <title>#superhydrant</title>
+	<meta charset="utf-8" />
+    <script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBapOTEYyXNKhQz1w1MPwbsTJskWjT3IGg&sensor=false"></script>
+    <script src="App/app.js"></script>
+    <style>
+        #map-canvas{
+            height: 750px;
+        }
+    </style>
+</head>
+<body ng-controller="tweetController">
+    Total tweet count: {{tweetCount}}<br />
+
+    <div id="map-canvas" style="width: 100%;">Loading</div>
+
+    <script type="text/javascript">
+        $(function() {
+            var map;
+            var markers = [];
+
+            function initialize() {
+
+                var mapOptions = {
+                    center: new google.maps.LatLng(38.3481191, -98.7569559),
+                    zoom: 5
+                };
+                map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+
+                map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
+
+                console.log('Google map initialized');
+            }
+
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+            window.tweetsLoaded = function allTweetsLoaded(locationData) {
+
+                console.log('All tweets loaded. Received ', locationData.length);
+
+                if (!map)
+                    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+                for (var i = 0; i < locationData.length; i++) {
+                    setTimeout((local, i) => {
+                        console.log(local);
+                        var shape = {
+                            coord: [1, 1, 1, 20, 18, 20, 18, 1],
+                            type: 'poly'
+                        };
+                        var myLatLng = new google.maps.LatLng(local.latitude, local.longitude);
+                        var image = local.url;
+                        var title = 'Hydrant is ' + local.condition;
+                        var infowindow = new google.maps.InfoWindow({
+                           content: image + " " + title,
+                           maxWidth: 200
+                         });
+                        var myMarker = new google.maps.Marker({
+                            position: myLatLng,
+                            map: map,
+                            //icon: image,
+                            animation: google.maps.Animation.DROP,
+                            shape: shape,
+                            title: 'Hydrant is ' + local.condition,
+                            label: i + ' '
+                        });
+
+                        myMarker.addListener('click', function (event) {
+                            //console.log('Marker clicked ', event);
+                            infowindow.open(map, myMarker);
+                        });
+                        markers.push(myMarker);
+                    }, i * 100, locationData[i], i+1);
+                }
+
+            };
+        });
+    </script>
+</body>
+
+
+</html>
